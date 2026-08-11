@@ -30,7 +30,7 @@ export function UsagePage() {
   )
 
   return (
-    <div className="p-8 max-w-5xl">
+    <div className="p-8">
       <h1 className="font-display text-2xl font-bold text-ink mb-1">Usage & Limits</h1>
       <p className="text-sm text-ink-faint mb-8">Real, queryable Postgres metrics only. Storage, bandwidth, and function invocations are metered by Supabase's own billing system and aren't exposed here — check those in the Supabase dashboard.</p>
 
@@ -62,7 +62,7 @@ export function UsagePage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+          <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4 mb-8">
             {[
               { label: 'Auth users', value: usage.auth_users_count, icon: Users },
               { label: 'Organizations', value: usage.organizations_count, icon: Building2 },

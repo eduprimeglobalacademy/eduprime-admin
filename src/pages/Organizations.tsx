@@ -178,7 +178,7 @@ export function OrganizationsPage() {
   )
 
   return (
-    <div className="p-8 max-w-7xl">
+    <div className="p-8">
       <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
         <h1 className="font-display text-2xl font-bold text-ink">Organizations</h1>
         <div className="relative">

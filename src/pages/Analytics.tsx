@@ -83,7 +83,7 @@ export function AnalyticsPage() {
   )
 
   return (
-    <div className="p-8 max-w-6xl">
+    <div className="p-8">
       <h1 className="font-display text-2xl font-bold text-ink mb-1">Analytics</h1>
       <p className="text-sm text-ink-faint mb-8">Computed live from current organization, teacher, test, and subscription data. No historical snapshots exist yet — see notes on each metric.</p>
 

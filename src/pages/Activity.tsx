@@ -29,7 +29,7 @@ export function ActivityPage() {
   )
 
   return (
-    <div className="p-8 max-w-4xl">
+    <div className="p-8 max-w-4xl mx-auto">
       <h1 className="font-display text-2xl font-bold text-ink mb-1">Activity</h1>
       <p className="text-sm text-ink-faint mb-8">Most recent 100 impersonation ("view as") sessions, append-only and logged server-side — this list can't be edited or skipped by the admin who triggered it.</p>
 

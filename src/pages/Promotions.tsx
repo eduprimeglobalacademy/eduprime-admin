@@ -98,7 +98,7 @@ export function PromotionsPage() {
   )
 
   return (
-    <div className="p-8 max-w-5xl">
+    <div className="p-8">
       <div className="flex items-center justify-between mb-1 flex-wrap gap-3">
         <h1 className="font-display text-2xl font-bold text-ink">Promotions</h1>
         <Button onClick={openCreate}><Plus className="w-4 h-4" />New promotion</Button>
