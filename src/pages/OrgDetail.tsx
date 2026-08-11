@@ -62,6 +62,7 @@ export function OrgDetailPage({
   const [savingDomain, setSavingDomain] = useState(false)
 
   const [branding, setBranding] = useState({ primary: org.primary_color, secondary: org.secondary_color })
+  const [logoUrl, setLogoUrl] = useState(org.logo_url || '')
   const [savingBranding, setSavingBranding] = useState(false)
 
   const [log, setLog] = useState<ImpersonationLogEntry[]>([])
@@ -71,7 +72,8 @@ export function OrgDetailPage({
     setTrialEndsAt(org.trial_ends_at ? org.trial_ends_at.slice(0, 10) : '')
     setDomain(org.custom_domain || '')
     setBranding({ primary: org.primary_color, secondary: org.secondary_color })
-  }, [org.id, org.name, org.slug, org.trial_ends_at, org.custom_domain, org.primary_color, org.secondary_color])
+    setLogoUrl(org.logo_url || '')
+  }, [org.id, org.name, org.slug, org.trial_ends_at, org.custom_domain, org.primary_color, org.secondary_color, org.logo_url])
 
   useEffect(() => {
     supabase
@@ -114,7 +116,9 @@ export function OrgDetailPage({
 
   const saveBranding = async () => {
     setSavingBranding(true)
-    await supabase.from('organizations').update({ primary_color: branding.primary, secondary_color: branding.secondary }).eq('id', org.id)
+    await supabase.from('organizations').update({
+      primary_color: branding.primary, secondary_color: branding.secondary, logo_url: logoUrl.trim() || null,
+    }).eq('id', org.id)
     await onRefetch()
     setSavingBranding(false)
   }
@@ -188,7 +192,7 @@ export function OrgDetailPage({
               onChange={(e) => onPlanChange(org, e.target.value)}
               className="input-base"
             >
-              {plans.map((p) => <option key={p.id} value={p.id}>{p.name}{p.price_inr != null ? ` — ₹${p.price_inr.toLocaleString('en-IN')}/mo` : ''}</option>)}
+              {plans.map((p) => <option key={p.id} value={p.id}>{p.is_public ? '' : '🔒 '}{p.name}{p.price_inr != null ? ` — ₹${p.price_inr.toLocaleString('en-IN')}/mo` : ''}</option>)}
             </select>
             {plan && (
               <div className="grid grid-cols-3 gap-2 text-center">
@@ -247,6 +251,20 @@ export function OrgDetailPage({
 
         <Card label="Branding">
           <div className="space-y-3">
+            <div className="flex items-center gap-3">
+              {logoUrl ? (
+                <img src={logoUrl} alt="" className="w-10 h-10 rounded-lg object-contain border border-app shrink-0" style={{ background: 'var(--surface-2)' }} onError={(e) => { e.currentTarget.style.visibility = 'hidden' }} />
+              ) : (
+                <div className="w-10 h-10 rounded-lg border border-app shrink-0 flex items-center justify-center text-[10px] text-ink-faint" style={{ background: 'var(--surface-2)' }}>none</div>
+              )}
+              <input
+                value={logoUrl}
+                onChange={(e) => setLogoUrl(e.target.value)}
+                placeholder="https://…/logo.png"
+                className="input-base font-mono text-xs flex-1"
+              />
+            </div>
+            <p className="text-xs text-ink-faint -mt-1">No upload storage wired up yet — paste a hosted image URL. Blank falls back to the default EduPrime mark everywhere the app shows a logo.</p>
             {(['primary', 'secondary'] as const).map((key) => (
               <div key={key} className="flex items-center gap-3">
                 <input

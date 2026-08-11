@@ -356,7 +356,7 @@ export function OrganizationsPage() {
                         className="text-xs rounded-lg px-2 py-1.5"
                         style={{ background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--ink)' }}
                       >
-                        {plans.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+                        {plans.map((p) => <option key={p.id} value={p.id}>{p.is_public ? '' : '🔒 '}{p.name}</option>)}
                       </select>
                     </td>
                     <td className="px-5 py-4" onClick={(e) => e.stopPropagation()}>

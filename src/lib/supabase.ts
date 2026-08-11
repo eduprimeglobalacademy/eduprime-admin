@@ -37,6 +37,7 @@ export interface Plan {
   razorpay_plan_id: string | null
   price_inr: number | null
   sort_order: number
+  is_public: boolean
 }
 
 export type SubscriptionStatus = 'created' | 'authenticated' | 'active' | 'pending' | 'halted' | 'cancelled' | 'completed'
