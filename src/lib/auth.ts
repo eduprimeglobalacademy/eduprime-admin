@@ -1,7 +1,7 @@
 import { supabase } from './supabase'
 import type { PlatformAdmin } from './supabase'
 
-const ROOT_DOMAIN = (import.meta.env.VITE_ROOT_DOMAIN || 'eduprime.app').toLowerCase()
+export const ROOT_DOMAIN = (import.meta.env.VITE_ROOT_DOMAIN || 'eduprime.app').toLowerCase()
 
 export function orgUrl(slug: string): string {
   return `https://${slug}.${ROOT_DOMAIN}`

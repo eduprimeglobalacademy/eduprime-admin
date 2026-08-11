@@ -1,13 +1,14 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Building2, TrendingUp, Users, AlertTriangle, Ban, RotateCcw, Eye, Search, X } from 'lucide-react'
+import { Building2, TrendingUp, Users, AlertTriangle, Ban, RotateCcw, Eye, Search } from 'lucide-react'
 import { supabase } from '../lib/supabase'
-import type { Organization, Plan, Subscription, OrgStatus, AdminUser, ImpersonationLogEntry } from '../lib/supabase'
+import type { Organization, Plan, Subscription, OrgStatus, AdminUser } from '../lib/supabase'
 import { impersonate } from '../lib/auth'
 import { Button } from '../components/ui/Button'
 import { LoadingSpinner } from '../components/ui/LoadingSpinner'
 import { StatusBadge } from '../components/ui/StatusBadge'
 import type { BadgeTone } from '../components/ui/StatusBadge'
 import { formatDateTime } from '../lib/utils'
+import { OrgDetailPage } from './OrgDetail'
 
 const STATUS_TONE: Record<OrgStatus, BadgeTone> = {
   trial: 'info',
@@ -37,8 +38,7 @@ export function OrganizationsPage() {
   const [impersonateError, setImpersonateError] = useState('')
   const [impersonateAsTeacherId, setImpersonateAsTeacherId] = useState('')
   const [orgTeachers, setOrgTeachers] = useState<{ id: string; name: string; email: string }[]>([])
-  const [detailOrg, setDetailOrg] = useState<OrgRow | null>(null)
-  const [detailLog, setDetailLog] = useState<ImpersonationLogEntry[]>([])
+  const [detailOrgId, setDetailOrgId] = useState<string | null>(null)
 
   useEffect(() => { fetchData() }, [])
 
@@ -160,22 +160,90 @@ export function OrganizationsPage() {
     }
   }
 
-  const openDetail = async (org: OrgRow) => {
-    setDetailOrg(org)
-    const { data } = await supabase
-      .from('impersonation_log')
-      .select('*')
-      .eq('org_id', org.id)
-      .order('started_at', { ascending: false })
-      .limit(10)
-    setDetailLog(data || [])
-  }
-
   if (loading) return (
     <div className="min-h-screen flex items-center justify-center">
       <LoadingSpinner size="lg" />
     </div>
   )
+
+  const detailOrg = detailOrgId ? orgs.find(o => o.id === detailOrgId) : null
+  if (detailOrg) {
+    return (
+      <>
+        <OrgDetailPage
+          org={detailOrg}
+          plans={plans}
+          subscription={latestSubByOrg.get(detailOrg.id)}
+          adminUser={adminByOrg.get(detailOrg.id)}
+          onBack={() => setDetailOrgId(null)}
+          onRefetch={fetchData}
+          onPlanChange={handlePlanChange}
+          onDomainStatusToggle={handleDomainStatusToggle}
+          onRequestStatusChange={(nextStatus, label) => setConfirmAction({ org: detailOrg, nextStatus, label })}
+          onOpenImpersonate={openImpersonate}
+          savingOrgId={savingOrgId}
+        />
+        {confirmAction && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+            <div className="rounded-2xl shadow-2xl w-full max-w-md animate-in" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
+              <div className="p-6">
+                <h3 className="text-lg font-bold mb-2 text-ink">{confirmAction.label} {confirmAction.org.name}?</h3>
+                <p className="text-sm mb-6 text-ink-faint">
+                  {confirmAction.nextStatus === 'suspended'
+                    ? 'This pauses new assessments and new educator tokens for this org. Existing tests, results, and students in progress are unaffected.'
+                    : 'This restores full access immediately, bypassing any pending payment.'}
+                </p>
+                <div className="flex gap-3">
+                  <Button variant="outline" onClick={() => setConfirmAction(null)} className="flex-1">Cancel</Button>
+                  <Button
+                    variant={confirmAction.nextStatus === 'suspended' ? 'danger' : 'primary'}
+                    onClick={handleStatusChange}
+                    loading={savingOrgId === confirmAction.org.id}
+                    className="flex-1"
+                  >
+                    {confirmAction.label}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+        {impersonateTarget && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+            <div className="rounded-2xl shadow-2xl w-full max-w-md animate-in" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
+              <div className="p-6">
+                <h3 className="text-lg font-bold mb-2 text-ink">View as — {impersonateTarget.name}</h3>
+                <p className="text-sm mb-4 text-ink-faint">
+                  This opens a new tab signed in as the selected account, without their password. It's logged — org id, account email, and timestamp. Exit from the amber banner in that tab at any point.
+                </p>
+
+                <label className="block text-xs font-semibold mb-1.5 text-ink-soft">Account</label>
+                <select
+                  value={impersonateAsTeacherId}
+                  onChange={(e) => setImpersonateAsTeacherId(e.target.value)}
+                  className="input-base mb-4"
+                >
+                  <option value="">Org Admin</option>
+                  {orgTeachers.map((t) => (
+                    <option key={t.id} value={t.id}>{t.name} ({t.email})</option>
+                  ))}
+                </select>
+                {orgTeachers.length === 0 && (
+                  <p className="text-xs -mt-3 mb-4 text-ink-muted">No educators in this org yet — only the admin account is available.</p>
+                )}
+
+                {impersonateError && <p className="text-sm text-red-400 mb-4">{impersonateError}</p>}
+                <div className="flex gap-3">
+                  <Button variant="outline" onClick={() => { setImpersonateTarget(null); setImpersonateError('') }} className="flex-1">Cancel</Button>
+                  <Button onClick={handleImpersonate} loading={impersonating} className="flex-1">View as</Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </>
+    )
+  }
 
   return (
     <div className="p-8">
@@ -271,7 +339,7 @@ export function OrganizationsPage() {
                     key={org.id}
                     className="transition-colors cursor-pointer hover:bg-surface-2"
                     style={{ borderBottom: '1px solid var(--border)' }}
-                    onClick={() => openDetail(org)}
+                    onClick={() => setDetailOrgId(org.id)}
                   >
                     <td className="px-5 py-4">
                       <p className="font-semibold text-ink">{org.name}</p>
@@ -393,82 +461,6 @@ export function OrganizationsPage() {
               <div className="flex gap-3">
                 <Button variant="outline" onClick={() => { setImpersonateTarget(null); setImpersonateError('') }} className="flex-1">Cancel</Button>
                 <Button onClick={handleImpersonate} loading={impersonating} className="flex-1">View as</Button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {detailOrg && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-stretch justify-end z-50" onClick={() => setDetailOrg(null)}>
-          <div
-            className="w-full max-w-md h-full overflow-y-auto scrollbar-thin animate-in p-6"
-            style={{ background: 'var(--surface)', borderLeft: '1px solid var(--border)' }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-start justify-between mb-6">
-              <div>
-                <h3 className="text-lg font-bold text-ink">{detailOrg.name}</h3>
-                <p className="text-xs font-mono text-ink-faint">{detailOrg.slug}</p>
-              </div>
-              <button onClick={() => setDetailOrg(null)} className="text-ink-faint hover:text-ink">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <div className="space-y-5">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-wide text-ink-faint mb-1.5">Admin contact</p>
-                {adminByOrg.get(detailOrg.id) ? (
-                  <div className="stat-card !p-3">
-                    <p className="font-semibold text-ink text-sm">{adminByOrg.get(detailOrg.id)!.name}</p>
-                    <p className="text-xs text-ink-faint">{adminByOrg.get(detailOrg.id)!.email}</p>
-                  </div>
-                ) : <p className="text-sm text-ink-muted">No admin account found.</p>}
-              </div>
-
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-wide text-ink-faint mb-1.5">Subscription</p>
-                {(() => {
-                  const sub = latestSubByOrg.get(detailOrg.id)
-                  return sub ? (
-                    <div className="stat-card !p-3 space-y-1 text-sm">
-                      <div className="flex justify-between"><span className="text-ink-faint">Status</span><span className="text-ink font-semibold">{sub.status}</span></div>
-                      <div className="flex justify-between"><span className="text-ink-faint">Renews</span><span className="text-ink">{sub.current_period_end ? formatDateTime(sub.current_period_end) : '—'}</span></div>
-                      <div className="flex justify-between"><span className="text-ink-faint">Razorpay ID</span><span className="text-ink font-mono text-xs">{sub.razorpay_subscription_id}</span></div>
-                    </div>
-                  ) : <p className="text-sm text-ink-muted">No subscription on file (trial or never billed).</p>
-                })()}
-              </div>
-
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-wide text-ink-faint mb-1.5">Usage</p>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="stat-card !p-3">
-                    <p className="text-xs text-ink-faint">Teachers</p>
-                    <p className="text-xl font-bold text-ink tabular-nums">{detailOrg.teacherCount}</p>
-                  </div>
-                  <div className="stat-card !p-3">
-                    <p className="text-xs text-ink-faint">Tests</p>
-                    <p className="text-xl font-bold text-ink tabular-nums">{detailOrg.testCount}</p>
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-wide text-ink-faint mb-1.5">Recent impersonation</p>
-                {detailLog.length === 0 ? (
-                  <p className="text-sm text-ink-muted">No impersonation activity for this org.</p>
-                ) : (
-                  <div className="space-y-1.5">
-                    {detailLog.map((entry) => (
-                      <div key={entry.id} className="text-xs flex justify-between border-b border-app py-1.5 last:border-0">
-                        <span className="text-ink-soft">{entry.target_email}</span>
-                        <span className="text-ink-faint">{formatDateTime(entry.started_at)}</span>
-                      </div>
-                    ))}
-                  </div>
-                )}
               </div>
             </div>
           </div>
