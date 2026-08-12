@@ -20,15 +20,17 @@ interface PlanForm {
   is_public: boolean
   addon_teacher_price_inr: string
   addon_test_price_inr: string
+  addon_student_price_inr: string
   razorpay_addon_teacher_plan_id: string
   razorpay_addon_test_plan_id: string
+  razorpay_addon_student_plan_id: string
 }
 
 const EMPTY_FORM: PlanForm = {
   id: '', name: '', max_teachers: '', max_active_tests: '', max_students_per_test: '',
   price_inr: '', razorpay_plan_id: '', is_public: false,
-  addon_teacher_price_inr: '', addon_test_price_inr: '',
-  razorpay_addon_teacher_plan_id: '', razorpay_addon_test_plan_id: '',
+  addon_teacher_price_inr: '', addon_test_price_inr: '', addon_student_price_inr: '',
+  razorpay_addon_teacher_plan_id: '', razorpay_addon_test_plan_id: '', razorpay_addon_student_plan_id: '',
 }
 
 const toNumOrNull = (s: string) => (s.trim() === '' ? null : Number(s))
@@ -75,8 +77,10 @@ export function PlansPage() {
       is_public: plan.is_public,
       addon_teacher_price_inr: plan.addon_teacher_price_inr?.toString() ?? '',
       addon_test_price_inr: plan.addon_test_price_inr?.toString() ?? '',
+      addon_student_price_inr: plan.addon_student_price_inr?.toString() ?? '',
       razorpay_addon_teacher_plan_id: plan.razorpay_addon_teacher_plan_id ?? '',
       razorpay_addon_test_plan_id: plan.razorpay_addon_test_plan_id ?? '',
+      razorpay_addon_student_plan_id: plan.razorpay_addon_student_plan_id ?? '',
     })
     setIdTouched(true)
     setError('')
@@ -106,8 +110,10 @@ export function PlansPage() {
       is_public: form.is_public,
       addon_teacher_price_inr: toNumOrNull(form.addon_teacher_price_inr),
       addon_test_price_inr: toNumOrNull(form.addon_test_price_inr),
+      addon_student_price_inr: toNumOrNull(form.addon_student_price_inr),
       razorpay_addon_teacher_plan_id: form.razorpay_addon_teacher_plan_id.trim() || null,
       razorpay_addon_test_plan_id: form.razorpay_addon_test_plan_id.trim() || null,
+      razorpay_addon_student_plan_id: form.razorpay_addon_student_plan_id.trim() || null,
     }
 
     setSaving(true)
@@ -166,7 +172,8 @@ export function PlansPage() {
                   <td className="px-5 py-4 text-ink-soft text-xs">
                     {plan.addon_teacher_price_inr != null && <div>₹{plan.addon_teacher_price_inr}/teacher</div>}
                     {plan.addon_test_price_inr != null && <div>₹{plan.addon_test_price_inr}/test</div>}
-                    {plan.addon_teacher_price_inr == null && plan.addon_test_price_inr == null && '—'}
+                    {plan.addon_student_price_inr != null && <div>₹{plan.addon_student_price_inr}/student</div>}
+                    {plan.addon_teacher_price_inr == null && plan.addon_test_price_inr == null && plan.addon_student_price_inr == null && '—'}
                   </td>
                   <td className="px-5 py-4 text-xs font-mono text-ink-faint">{plan.razorpay_plan_id || 'not set'}</td>
                   <td className="px-5 py-4">
@@ -225,7 +232,7 @@ export function PlansPage() {
                 </div>
               </div>
               <p className="text-xs text-ink-faint">Create the plan on Razorpay's dashboard first, then paste its id here — nothing in this app talks to Razorpay's Plans API.</p>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-3 gap-3">
                 <div>
                   <label className="block text-xs font-semibold mb-1.5 text-ink-soft">Add-on ₹/teacher</label>
                   <input type="number" min="0" value={form.addon_teacher_price_inr} onChange={(e) => setForm({ ...form, addon_teacher_price_inr: e.target.value })} className="input-base" placeholder="blank = not offered" />
@@ -234,9 +241,13 @@ export function PlansPage() {
                   <label className="block text-xs font-semibold mb-1.5 text-ink-soft">Add-on ₹/test slot</label>
                   <input type="number" min="0" value={form.addon_test_price_inr} onChange={(e) => setForm({ ...form, addon_test_price_inr: e.target.value })} className="input-base" placeholder="blank = not offered" />
                 </div>
+                <div>
+                  <label className="block text-xs font-semibold mb-1.5 text-ink-soft">Add-on ₹/student</label>
+                  <input type="number" min="0" value={form.addon_student_price_inr} onChange={(e) => setForm({ ...form, addon_student_price_inr: e.target.value })} className="input-base" placeholder="blank = not offered" />
+                </div>
               </div>
-              <p className="text-xs text-ink-faint -mt-1">Per-unit price orgs on this plan pay to buy extra teacher seats / active-test slots without upgrading tiers. Blank disables add-on purchasing for that dimension.</p>
-              <div className="grid grid-cols-2 gap-3">
+              <p className="text-xs text-ink-faint -mt-1">Per-unit price orgs on this plan pay to buy extra teacher seats / active-test slots / students-per-test without upgrading tiers. Blank disables add-on purchasing for that dimension. Student add-on also powers flexible/metered billing (pay per actual student, no upfront purchase).</p>
+              <div className="grid grid-cols-3 gap-3">
                 <div>
                   <label className="block text-xs font-semibold mb-1.5 text-ink-soft">Add-on teacher plan id</label>
                   <input value={form.razorpay_addon_teacher_plan_id} onChange={(e) => setForm({ ...form, razorpay_addon_teacher_plan_id: e.target.value })} className="input-base font-mono text-xs" placeholder="plan_xxxxx" />
@@ -244,6 +255,10 @@ export function PlansPage() {
                 <div>
                   <label className="block text-xs font-semibold mb-1.5 text-ink-soft">Add-on test-slot plan id</label>
                   <input value={form.razorpay_addon_test_plan_id} onChange={(e) => setForm({ ...form, razorpay_addon_test_plan_id: e.target.value })} className="input-base font-mono text-xs" placeholder="plan_xxxxx" />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold mb-1.5 text-ink-soft">Add-on student plan id</label>
+                  <input value={form.razorpay_addon_student_plan_id} onChange={(e) => setForm({ ...form, razorpay_addon_student_plan_id: e.target.value })} className="input-base font-mono text-xs" placeholder="plan_xxxxx" />
                 </div>
               </div>
               <p className="text-xs text-ink-faint -mt-1">Each recurring add-on bills as its own dedicated Razorpay subscription (Razorpay's Addons API is deprecated) — create a separate per-unit Plan for each on Razorpay's dashboard first, paste its id here.</p>
