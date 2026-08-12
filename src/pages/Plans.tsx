@@ -20,12 +20,15 @@ interface PlanForm {
   is_public: boolean
   addon_teacher_price_inr: string
   addon_test_price_inr: string
+  razorpay_addon_teacher_plan_id: string
+  razorpay_addon_test_plan_id: string
 }
 
 const EMPTY_FORM: PlanForm = {
   id: '', name: '', max_teachers: '', max_active_tests: '', max_students_per_test: '',
   price_inr: '', razorpay_plan_id: '', is_public: false,
   addon_teacher_price_inr: '', addon_test_price_inr: '',
+  razorpay_addon_teacher_plan_id: '', razorpay_addon_test_plan_id: '',
 }
 
 const toNumOrNull = (s: string) => (s.trim() === '' ? null : Number(s))
@@ -72,6 +75,8 @@ export function PlansPage() {
       is_public: plan.is_public,
       addon_teacher_price_inr: plan.addon_teacher_price_inr?.toString() ?? '',
       addon_test_price_inr: plan.addon_test_price_inr?.toString() ?? '',
+      razorpay_addon_teacher_plan_id: plan.razorpay_addon_teacher_plan_id ?? '',
+      razorpay_addon_test_plan_id: plan.razorpay_addon_test_plan_id ?? '',
     })
     setIdTouched(true)
     setError('')
@@ -101,6 +106,8 @@ export function PlansPage() {
       is_public: form.is_public,
       addon_teacher_price_inr: toNumOrNull(form.addon_teacher_price_inr),
       addon_test_price_inr: toNumOrNull(form.addon_test_price_inr),
+      razorpay_addon_teacher_plan_id: form.razorpay_addon_teacher_plan_id.trim() || null,
+      razorpay_addon_test_plan_id: form.razorpay_addon_test_plan_id.trim() || null,
     }
 
     setSaving(true)
@@ -229,6 +236,17 @@ export function PlansPage() {
                 </div>
               </div>
               <p className="text-xs text-ink-faint -mt-1">Per-unit price orgs on this plan pay to buy extra teacher seats / active-test slots without upgrading tiers. Blank disables add-on purchasing for that dimension.</p>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold mb-1.5 text-ink-soft">Add-on teacher plan id</label>
+                  <input value={form.razorpay_addon_teacher_plan_id} onChange={(e) => setForm({ ...form, razorpay_addon_teacher_plan_id: e.target.value })} className="input-base font-mono text-xs" placeholder="plan_xxxxx" />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold mb-1.5 text-ink-soft">Add-on test-slot plan id</label>
+                  <input value={form.razorpay_addon_test_plan_id} onChange={(e) => setForm({ ...form, razorpay_addon_test_plan_id: e.target.value })} className="input-base font-mono text-xs" placeholder="plan_xxxxx" />
+                </div>
+              </div>
+              <p className="text-xs text-ink-faint -mt-1">Each recurring add-on bills as its own dedicated Razorpay subscription (Razorpay's Addons API is deprecated) — create a separate per-unit Plan for each on Razorpay's dashboard first, paste its id here.</p>
               <label className="flex items-center gap-2 text-sm text-ink-soft cursor-pointer">
                 <input type="checkbox" checked={form.is_public} onChange={(e) => setForm({ ...form, is_public: e.target.checked })} />
                 Public — browsable/self-serve in every org's billing page

@@ -40,6 +40,10 @@ export interface Plan {
   is_public: boolean
   addon_teacher_price_inr: number | null
   addon_test_price_inr: number | null
+  addon_student_price_inr: number | null
+  razorpay_addon_teacher_plan_id: string | null
+  razorpay_addon_test_plan_id: string | null
+  razorpay_addon_student_plan_id: string | null
 }
 
 export type AddonKind = 'extra_teachers' | 'extra_active_tests'
@@ -104,6 +108,8 @@ export interface Promotion {
   starts_at: string | null
   ends_at: string | null
   status: PromotionStatus
+  org_id: string | null
+  razorpay_offer_id: string | null
   created_by: string | null
   created_at: string
 }
