@@ -18,11 +18,14 @@ interface PlanForm {
   price_inr: string
   razorpay_plan_id: string
   is_public: boolean
+  addon_teacher_price_inr: string
+  addon_test_price_inr: string
 }
 
 const EMPTY_FORM: PlanForm = {
   id: '', name: '', max_teachers: '', max_active_tests: '', max_students_per_test: '',
   price_inr: '', razorpay_plan_id: '', is_public: false,
+  addon_teacher_price_inr: '', addon_test_price_inr: '',
 }
 
 const toNumOrNull = (s: string) => (s.trim() === '' ? null : Number(s))
@@ -67,6 +70,8 @@ export function PlansPage() {
       price_inr: plan.price_inr?.toString() ?? '',
       razorpay_plan_id: plan.razorpay_plan_id ?? '',
       is_public: plan.is_public,
+      addon_teacher_price_inr: plan.addon_teacher_price_inr?.toString() ?? '',
+      addon_test_price_inr: plan.addon_test_price_inr?.toString() ?? '',
     })
     setIdTouched(true)
     setError('')
@@ -94,6 +99,8 @@ export function PlansPage() {
       price_inr: toNumOrNull(form.price_inr),
       razorpay_plan_id: form.razorpay_plan_id.trim() || null,
       is_public: form.is_public,
+      addon_teacher_price_inr: toNumOrNull(form.addon_teacher_price_inr),
+      addon_test_price_inr: toNumOrNull(form.addon_test_price_inr),
     }
 
     setSaving(true)
@@ -129,6 +136,7 @@ export function PlansPage() {
                 <th className="px-5 py-3 font-bold">Teachers</th>
                 <th className="px-5 py-3 font-bold">Active tests</th>
                 <th className="px-5 py-3 font-bold">Students/test</th>
+                <th className="px-5 py-3 font-bold">Add-on price</th>
                 <th className="px-5 py-3 font-bold">Razorpay plan</th>
                 <th className="px-5 py-3 font-bold">Actions</th>
               </tr>
@@ -148,6 +156,11 @@ export function PlansPage() {
                   <td className="px-5 py-4 text-ink-soft tabular-nums">{plan.max_teachers ?? '∞'}</td>
                   <td className="px-5 py-4 text-ink-soft tabular-nums">{plan.max_active_tests ?? '∞'}</td>
                   <td className="px-5 py-4 text-ink-soft tabular-nums">{plan.max_students_per_test ?? '∞'}</td>
+                  <td className="px-5 py-4 text-ink-soft text-xs">
+                    {plan.addon_teacher_price_inr != null && <div>₹{plan.addon_teacher_price_inr}/teacher</div>}
+                    {plan.addon_test_price_inr != null && <div>₹{plan.addon_test_price_inr}/test</div>}
+                    {plan.addon_teacher_price_inr == null && plan.addon_test_price_inr == null && '—'}
+                  </td>
                   <td className="px-5 py-4 text-xs font-mono text-ink-faint">{plan.razorpay_plan_id || 'not set'}</td>
                   <td className="px-5 py-4">
                     <Button variant="outline" size="sm" onClick={() => openEdit(plan)}><Pencil className="w-3.5 h-3.5" /></Button>
@@ -205,6 +218,17 @@ export function PlansPage() {
                 </div>
               </div>
               <p className="text-xs text-ink-faint">Create the plan on Razorpay's dashboard first, then paste its id here — nothing in this app talks to Razorpay's Plans API.</p>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold mb-1.5 text-ink-soft">Add-on ₹/teacher</label>
+                  <input type="number" min="0" value={form.addon_teacher_price_inr} onChange={(e) => setForm({ ...form, addon_teacher_price_inr: e.target.value })} className="input-base" placeholder="blank = not offered" />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold mb-1.5 text-ink-soft">Add-on ₹/test slot</label>
+                  <input type="number" min="0" value={form.addon_test_price_inr} onChange={(e) => setForm({ ...form, addon_test_price_inr: e.target.value })} className="input-base" placeholder="blank = not offered" />
+                </div>
+              </div>
+              <p className="text-xs text-ink-faint -mt-1">Per-unit price orgs on this plan pay to buy extra teacher seats / active-test slots without upgrading tiers. Blank disables add-on purchasing for that dimension.</p>
               <label className="flex items-center gap-2 text-sm text-ink-soft cursor-pointer">
                 <input type="checkbox" checked={form.is_public} onChange={(e) => setForm({ ...form, is_public: e.target.checked })} />
                 Public — browsable/self-serve in every org's billing page

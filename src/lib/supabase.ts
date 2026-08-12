@@ -38,6 +38,22 @@ export interface Plan {
   price_inr: number | null
   sort_order: number
   is_public: boolean
+  addon_teacher_price_inr: number | null
+  addon_test_price_inr: number | null
+}
+
+export type AddonKind = 'extra_teachers' | 'extra_active_tests'
+
+export interface CapacityAddon {
+  id: string
+  org_id: string
+  kind: AddonKind
+  quantity: number
+  mode: 'recurring' | 'one_time'
+  status: string
+  unit_price_inr: number
+  expires_at: string | null
+  created_at: string
 }
 
 export type SubscriptionStatus = 'created' | 'authenticated' | 'active' | 'pending' | 'halted' | 'cancelled' | 'completed'

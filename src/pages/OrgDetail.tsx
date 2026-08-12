@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { ArrowLeft, Ban, RotateCcw, Eye, Save, ExternalLink } from 'lucide-react'
 import { supabase } from '../lib/supabase'
-import type { Organization, Plan, Subscription, OrgStatus, AdminUser, ImpersonationLogEntry } from '../lib/supabase'
+import type { Organization, Plan, Subscription, OrgStatus, AdminUser, ImpersonationLogEntry, CapacityAddon } from '../lib/supabase'
 import { orgUrl, ROOT_DOMAIN } from '../lib/auth'
 import { Button } from '../components/ui/Button'
 import { StatusBadge } from '../components/ui/StatusBadge'
@@ -66,6 +66,7 @@ export function OrgDetailPage({
   const [savingBranding, setSavingBranding] = useState(false)
 
   const [log, setLog] = useState<ImpersonationLogEntry[]>([])
+  const [addons, setAddons] = useState<CapacityAddon[]>([])
 
   useEffect(() => {
     setGeneral({ name: org.name, slug: org.slug })
@@ -83,6 +84,14 @@ export function OrgDetailPage({
       .order('started_at', { ascending: false })
       .limit(10)
       .then(({ data }) => setLog(data || []))
+
+    supabase
+      .from('org_capacity_addons')
+      .select('*')
+      .eq('org_id', org.id)
+      .eq('status', 'active')
+      .order('created_at', { ascending: false })
+      .then(({ data }) => setAddons(data || []))
   }, [org.id])
 
   const plan = plans.find(p => p.id === org.plan_id)
@@ -217,6 +226,25 @@ export function OrgDetailPage({
               <p className="text-xs text-ink-muted">No Razorpay subscription on file — trial, or never billed.</p>
             )}
           </div>
+        </Card>
+
+        <Card label="Add-on capacity">
+          {addons.length === 0 ? (
+            <p className="text-sm text-ink-muted">No add-ons purchased — self-serve from the org's own Billing page.</p>
+          ) : (
+            <div className="space-y-2">
+              {addons.map((addon) => (
+                <div key={addon.id} className="flex items-center justify-between text-sm">
+                  <span className="text-ink-soft">
+                    +{addon.quantity} {addon.kind === 'extra_teachers' ? 'teacher seats' : 'active test slots'}
+                  </span>
+                  <span className="text-ink-faint text-xs">
+                    ₹{addon.unit_price_inr * addon.quantity}{addon.mode === 'recurring' ? '/mo' : addon.expires_at ? ` until ${formatDateTime(addon.expires_at)}` : ' this cycle'}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
         </Card>
 
         <Card label="Trial & access">
