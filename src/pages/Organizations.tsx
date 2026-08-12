@@ -39,6 +39,7 @@ export function OrganizationsPage() {
   const [impersonateAsTeacherId, setImpersonateAsTeacherId] = useState('')
   const [orgTeachers, setOrgTeachers] = useState<{ id: string; name: string; email: string }[]>([])
   const [detailOrgId, setDetailOrgId] = useState<string | null>(null)
+  const [planDowngradeConfirm, setPlanDowngradeConfirm] = useState<{ org: OrgRow; planId: string; planName: string; reasons: string[] } | null>(null)
 
   useEffect(() => { fetchData() }, [])
 
@@ -112,11 +113,38 @@ export function OrganizationsPage() {
     return rows
   }, [orgs, statusFilter, search])
 
-  const handlePlanChange = async (org: OrgRow, planId: string) => {
+  const commitPlanChange = async (org: OrgRow, planId: string) => {
     setSavingOrgId(org.id)
     await supabase.from('organizations').update({ plan_id: planId }).eq('id', org.id)
+    setPlanDowngradeConfirm(null)
     await fetchData()
     setSavingOrgId(null)
+  }
+
+  // Warn, don't block, before an org is moved onto a plan with lower limits
+  // than its current usage — the INSERT-time RLS checks (org_within_teacher_limit
+  // etc.) only stop *new* writes going forward, nothing retroactively flags
+  // an org that's already over a plan it's about to be moved onto.
+  const handlePlanChange = async (org: OrgRow, planId: string) => {
+    const newPlan = plansById.get(planId)
+    if (!newPlan) { await commitPlanChange(org, planId); return }
+
+    const reasons: string[] = []
+    if (newPlan.max_teachers != null && org.teacherCount > newPlan.max_teachers) {
+      reasons.push(`${org.teacherCount} educators, new plan allows ${newPlan.max_teachers}`)
+    }
+    if (newPlan.max_active_tests != null) {
+      const { data: activeCount } = await supabase.rpc('org_active_test_count', { p_org_id: org.id })
+      if (typeof activeCount === 'number' && activeCount > newPlan.max_active_tests) {
+        reasons.push(`${activeCount} active tests, new plan allows ${newPlan.max_active_tests}`)
+      }
+    }
+
+    if (reasons.length > 0) {
+      setPlanDowngradeConfirm({ org, planId, planName: newPlan.name, reasons })
+      return
+    }
+    await commitPlanChange(org, planId)
   }
 
   const handleDomainStatusToggle = async (org: OrgRow) => {
@@ -426,6 +454,31 @@ export function OrganizationsPage() {
                   className="flex-1"
                 >
                   {confirmAction.label}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {planDowngradeConfirm && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="rounded-2xl shadow-2xl w-full max-w-md animate-in" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
+            <div className="p-6">
+              <h3 className="text-lg font-bold mb-2 text-ink">Move {planDowngradeConfirm.org.name} to {planDowngradeConfirm.planName}?</h3>
+              <p className="text-sm mb-3 text-ink-faint">This org is already over the new plan's limits:</p>
+              <ul className="text-sm mb-6 space-y-1 list-disc list-inside text-ink-soft">
+                {planDowngradeConfirm.reasons.map((r) => <li key={r}>{r}</li>)}
+              </ul>
+              <p className="text-xs mb-6 text-ink-faint">Nothing existing is affected — they just won't be able to add more until they're back under the limit.</p>
+              <div className="flex gap-3">
+                <Button variant="outline" onClick={() => setPlanDowngradeConfirm(null)} className="flex-1">Cancel</Button>
+                <Button
+                  onClick={() => commitPlanChange(planDowngradeConfirm.org, planDowngradeConfirm.planId)}
+                  loading={savingOrgId === planDowngradeConfirm.org.id}
+                  className="flex-1"
+                >
+                  Move anyway
                 </Button>
               </div>
             </div>

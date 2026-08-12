@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Building2, LineChart, Gauge, History, Tag, LogOut, Shield } from 'lucide-react'
+import { Building2, LineChart, Gauge, History, Tag, Layers, LogOut, Shield } from 'lucide-react'
 import { getCurrentPlatformAdmin, signOut } from './lib/auth'
 import type { PlatformAdmin } from './lib/supabase'
 import { SignIn } from './components/SignIn'
@@ -9,11 +9,13 @@ import { AnalyticsPage } from './pages/Analytics'
 import { UsagePage } from './pages/Usage'
 import { ActivityPage } from './pages/Activity'
 import { PromotionsPage } from './pages/Promotions'
+import { PlansPage } from './pages/Plans'
 
-type Page = 'organizations' | 'analytics' | 'usage' | 'activity' | 'promotions'
+type Page = 'organizations' | 'plans' | 'analytics' | 'usage' | 'activity' | 'promotions'
 
 const NAV: { id: Page; label: string; icon: typeof Building2 }[] = [
   { id: 'organizations', label: 'Organizations', icon: Building2 },
+  { id: 'plans', label: 'Plans', icon: Layers },
   { id: 'analytics', label: 'Analytics', icon: LineChart },
   { id: 'usage', label: 'Usage & Limits', icon: Gauge },
   { id: 'activity', label: 'Activity', icon: History },
@@ -89,6 +91,7 @@ function App() {
 
       <main className="flex-1 min-w-0">
         {page === 'organizations' && <OrganizationsPage />}
+        {page === 'plans' && <PlansPage />}
         {page === 'analytics' && <AnalyticsPage />}
         {page === 'usage' && <UsagePage />}
         {page === 'activity' && <ActivityPage />}
