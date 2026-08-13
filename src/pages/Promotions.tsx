@@ -220,7 +220,7 @@ export function PromotionsPage() {
                 <input value={form.razorpay_offer_id} onChange={(e) => setForm({ ...form, razorpay_offer_id: e.target.value })} className="input-base font-mono text-xs" placeholder="offer_xxxxx" />
                 <p className="text-xs text-ink-faint mt-1">Create the offer on Razorpay's dashboard first (no create-offer API exists) — paste its id here so orgs can redeem it.</p>
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-semibold mb-1.5 text-ink-soft">Starts</label>
                   <input type="date" value={form.starts_at} onChange={(e) => setForm({ ...form, starts_at: e.target.value })} className="input-base" />

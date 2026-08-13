@@ -176,7 +176,7 @@ export function OrgDetailPage({
         </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-4 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
         <Card label="Teachers"><p className="text-2xl font-bold text-ink tabular-nums">{org.teacherCount}</p></Card>
         <Card label="Tests"><p className="text-2xl font-bold text-ink tabular-nums">{org.testCount}</p></Card>
         <Card label="Created"><p className="text-lg font-semibold text-ink">{formatDateTime(org.created_at)}</p></Card>

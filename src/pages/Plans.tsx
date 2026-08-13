@@ -207,7 +207,7 @@ export function PlansPage() {
                 />
                 {editing && <p className="text-xs text-ink-faint mt-1">Id can't change once created — other rows reference it.</p>}
               </div>
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div>
                   <label className="block text-xs font-semibold mb-1.5 text-ink-soft">Teachers</label>
                   <input type="number" min="0" value={form.max_teachers} onChange={(e) => setForm({ ...form, max_teachers: e.target.value })} className="input-base" placeholder="∞" />
@@ -221,7 +221,7 @@ export function PlansPage() {
                   <input type="number" min="0" value={form.max_students_per_test} onChange={(e) => setForm({ ...form, max_students_per_test: e.target.value })} className="input-base" placeholder="∞" />
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-semibold mb-1.5 text-ink-soft">Price ₹/mo</label>
                   <input type="number" min="0" value={form.price_inr} onChange={(e) => setForm({ ...form, price_inr: e.target.value })} className="input-base" placeholder="blank = not self-serve" />
@@ -232,7 +232,7 @@ export function PlansPage() {
                 </div>
               </div>
               <p className="text-xs text-ink-faint">Create the plan on Razorpay's dashboard first, then paste its id here — nothing in this app talks to Razorpay's Plans API.</p>
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div>
                   <label className="block text-xs font-semibold mb-1.5 text-ink-soft">Add-on ₹/teacher</label>
                   <input type="number" min="0" value={form.addon_teacher_price_inr} onChange={(e) => setForm({ ...form, addon_teacher_price_inr: e.target.value })} className="input-base" placeholder="blank = not offered" />
@@ -247,7 +247,7 @@ export function PlansPage() {
                 </div>
               </div>
               <p className="text-xs text-ink-faint -mt-1">Per-unit price orgs on this plan pay to buy extra teacher seats / active-test slots / students-per-test without upgrading tiers. Blank disables add-on purchasing for that dimension. Student add-on also powers flexible/metered billing (pay per actual student, no upfront purchase).</p>
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div>
                   <label className="block text-xs font-semibold mb-1.5 text-ink-soft">Add-on teacher plan id</label>
                   <input value={form.razorpay_addon_teacher_plan_id} onChange={(e) => setForm({ ...form, razorpay_addon_teacher_plan_id: e.target.value })} className="input-base font-mono text-xs" placeholder="plan_xxxxx" />
