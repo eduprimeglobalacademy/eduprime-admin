@@ -132,7 +132,9 @@ export function AnalyticsPage() {
         <div className="flex items-center gap-6 flex-wrap">
           <ResponsiveContainer width={180} height={180}>
             <PieChart>
-              <Pie data={revenueMix} dataKey="value" nameKey="name" innerRadius={45} outerRadius={80} paddingAngle={2}>
+              {/* Grow-in animation on this recharts version never resolves to a rendered
+                  path — sectors stay permanently empty <g>s. Skip the animation. */}
+              <Pie data={revenueMix} dataKey="value" nameKey="name" innerRadius={45} outerRadius={80} paddingAngle={2} isAnimationActive={false}>
                 {revenueMix.map((_, i) => <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />)}
               </Pie>
               <Tooltip contentStyle={{ background: 'var(--surface-2)', border: '1px solid var(--border)', borderRadius: 8, fontSize: 12, color: 'var(--ink)' }} />
