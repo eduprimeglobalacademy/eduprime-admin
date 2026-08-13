@@ -17,6 +17,17 @@ const STATUS_TONE: Record<PromotionStatus, BadgeTone> = {
 
 const EMPTY_FORM = { code: '', description: '', discount_note: '', starts_at: '', ends_at: '', org_id: '', razorpay_offer_id: '' }
 
+// The 'expired' status value exists in the schema but nothing ever sets
+// it — no scheduled job, no trigger, no button beyond Archive. Rather
+// than add a cron job just to flip a display label, compute it here: an
+// 'active' promotion whose ends_at has passed reads as expired without
+// ever touching the stored column. (Redemption itself is unaffected
+// either way — the redeem Edge Function does its own live date check.)
+function displayStatus(promo: Promotion): PromotionStatus {
+  if (promo.status === 'active' && promo.ends_at && new Date(promo.ends_at) < new Date()) return 'expired'
+  return promo.status
+}
+
 export function PromotionsPage() {
   const [promotions, setPromotions] = useState<Promotion[]>([])
   const [orgs, setOrgs] = useState<Organization[]>([])
@@ -44,7 +55,7 @@ export function PromotionsPage() {
   const orgsById = useMemo(() => new Map(orgs.map(o => [o.id, o])), [orgs])
 
   const filtered = useMemo(
-    () => statusFilter === 'all' ? promotions : promotions.filter(p => p.status === statusFilter),
+    () => statusFilter === 'all' ? promotions : promotions.filter(p => displayStatus(p) === statusFilter),
     [promotions, statusFilter]
   )
 
@@ -159,7 +170,7 @@ export function PromotionsPage() {
                     </td>
                     <td className="px-5 py-4 text-ink-soft text-xs">{promo.org_id ? orgsById.get(promo.org_id)?.name || 'Unknown org' : 'Any org'}</td>
                     <td className="px-5 py-4 text-ink-soft">{promo.discount_note || '—'}</td>
-                    <td className="px-5 py-4"><StatusBadge tone={STATUS_TONE[promo.status]}>{promo.status}</StatusBadge></td>
+                    <td className="px-5 py-4"><StatusBadge tone={STATUS_TONE[displayStatus(promo)]}>{displayStatus(promo)}</StatusBadge></td>
                     <td className="px-5 py-4 text-xs text-ink-faint">
                       {promo.starts_at ? formatDate(promo.starts_at) : '—'} – {promo.ends_at ? formatDate(promo.ends_at) : '—'}
                     </td>

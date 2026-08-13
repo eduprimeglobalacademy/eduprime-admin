@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { ArrowLeft, Ban, RotateCcw, Eye, Save, ExternalLink } from 'lucide-react'
 import { supabase } from '../lib/supabase'
-import type { Organization, Plan, Subscription, OrgStatus, AdminUser, ImpersonationLogEntry, CapacityAddon } from '../lib/supabase'
+import type { Organization, Plan, Subscription, OrgStatus, AdminUser, ImpersonationLogEntry, CapacityAddon, AddonKind } from '../lib/supabase'
 import { orgUrl, ROOT_DOMAIN } from '../lib/auth'
 import { Button } from '../components/ui/Button'
 import { StatusBadge } from '../components/ui/StatusBadge'
@@ -17,6 +17,12 @@ const STATUS_TONE: Record<OrgStatus, BadgeTone> = {
 }
 
 const SLUG_PATTERN = /^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$/
+
+const ADDON_LABEL: Record<AddonKind, string> = {
+  extra_teachers: 'teacher seats',
+  extra_active_tests: 'active test slots',
+  extra_students: 'students per test',
+}
 
 interface OrgRow extends Organization {
   teacherCount: number
@@ -206,16 +212,19 @@ export function OrgDetailPage({
             {plan && (
               <div className="grid grid-cols-3 gap-2 text-center">
                 {[
-                  { label: 'Teachers', value: plan.max_teachers },
-                  { label: 'Active tests', value: plan.max_active_tests },
-                  { label: 'Students/test', value: plan.max_students_per_test },
+                  { label: 'Teachers', value: plan.max_teachers ?? '∞' },
+                  { label: 'Active tests', value: plan.max_active_tests ?? '∞' },
+                  { label: 'Students/test', value: org.student_billing_mode === 'metered' ? 'Metered' : (plan.max_students_per_test ?? '∞') },
                 ].map(({ label, value }) => (
                   <div key={label} className="rounded-lg py-2" style={{ background: 'var(--surface-2)' }}>
-                    <p className="text-sm font-bold text-ink tabular-nums">{value ?? '∞'}</p>
+                    <p className="text-sm font-bold text-ink tabular-nums">{value}</p>
                     <p className="text-[10px] text-ink-faint uppercase tracking-wide">{label}</p>
                   </div>
                 ))}
               </div>
+            )}
+            {org.student_billing_mode === 'metered' && (
+              <p className="text-xs text-ink-faint">This org is on flexible/metered student billing — no per-test student cap, billed per actual student each cycle.</p>
             )}
             {subscription ? (
               <div className="text-sm space-y-1 pt-1">
@@ -236,10 +245,13 @@ export function OrgDetailPage({
               {addons.map((addon) => (
                 <div key={addon.id} className="flex items-center justify-between text-sm">
                   <span className="text-ink-soft">
-                    +{addon.quantity} {addon.kind === 'extra_teachers' ? 'teacher seats' : 'active test slots'}
+                    +{addon.quantity} {ADDON_LABEL[addon.kind]}
                   </span>
                   <span className="text-ink-faint text-xs">
-                    ₹{addon.unit_price_inr * addon.quantity}{addon.mode === 'recurring' ? '/mo' : addon.expires_at ? ` until ${formatDateTime(addon.expires_at)}` : ' this cycle'}
+                    ₹{addon.unit_price_inr * addon.quantity}
+                    {addon.mode === 'recurring' ? '/mo'
+                      : addon.mode === 'metered' ? '/unit, billed for actual usage each cycle'
+                      : addon.expires_at ? ` until ${formatDateTime(addon.expires_at)}` : ' this cycle'}
                   </span>
                 </div>
               ))}

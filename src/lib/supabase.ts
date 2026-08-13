@@ -25,6 +25,7 @@ export interface Organization {
   razorpay_customer_id?: string
   custom_domain?: string
   custom_domain_status?: 'pending' | 'active'
+  student_billing_mode: 'capped' | 'metered'
   created_at: string
 }
 
@@ -46,14 +47,14 @@ export interface Plan {
   razorpay_addon_student_plan_id: string | null
 }
 
-export type AddonKind = 'extra_teachers' | 'extra_active_tests'
+export type AddonKind = 'extra_teachers' | 'extra_active_tests' | 'extra_students'
 
 export interface CapacityAddon {
   id: string
   org_id: string
   kind: AddonKind
   quantity: number
-  mode: 'recurring' | 'one_time'
+  mode: 'recurring' | 'one_time' | 'metered'
   status: string
   unit_price_inr: number
   expires_at: string | null
